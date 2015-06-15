@@ -74,6 +74,14 @@ public OnVehicleVelocityChange(vehicleid, Float:newx, Float:newy, Float:newz, Fl
 public OnVehicleHealthChange(vehicleid, Float:newhealth, Float:oldhealth)
 */
 
+#define ToggleUnoccupiedVehicleDamage(%0,%1) Vehicle_SetPropertyInt(%0, v_spawn_uno_damage, !!(_:%1))
+#define IsUnoccupiedDamageToggled(%0) Vehicle_GetPropertyInt(%0, v_spawn_uno_damage)
+#define ToggleVehiclePetrolCapDestroy(%0,%1) Vehicle_SetPropertyInt(%0, v_petrolcap, !!(_:%1))
+#define IsPetrolCapDestroyToggled(%0) Vehicle_GetPropertyInt(%0, v_petrolcap)
+
+#define ToggleVehicleSticky(%0,%1) Vehicle_SetPropertyInt(%0, v_sticky, !!(_:%1))
+#define IsVehicleSticky(%0) Vehicle_GetPropertyInt(%0, v_sticky)
+
 #define VEHICLE_DAMAGE_PANELS       			0
 #define VEHICLE_DAMAGE_DOORS        			1
 #define VEHICLE_DAMAGE_LIGHTS					2
@@ -986,66 +994,52 @@ stock static const gVehicleTopSpeed[MAX_VEHICLE_MODELS] =
 #define v_sticky            21
 #define v_update_timer      22
 
-stock static Vehicle_SetPropertyInt(vehicleid, type, set)
+static const v_property_frmt_strings[][] =
 {
-	new string[35];
-	switch(type)
-	{
-		case v_interior: 		format(string, sizeof(string), "%i_v_interior", vehicleid);
-		case v_color<0>: 		format(string, sizeof(string), "%i_v_color_1", vehicleid);
-		case v_color<1>: 		format(string, sizeof(string), "%i_v_color_2", vehicleid);
-		case v_paintjob: 		format(string, sizeof(string), "%i_v_paintjob", vehicleid);
-		case v_horn: 			format(string, sizeof(string), "%i_v_horn", vehicleid);
-		case v_damage<0>:		format(string, sizeof(string), "%i_v_damage_1", vehicleid);
-		case v_damage<1>: 		format(string, sizeof(string), "%i_v_damage_2", vehicleid);
-		case v_damage<2>: 		format(string, sizeof(string), "%i_v_damage_3", vehicleid);
-		case v_damage<3>: 		format(string, sizeof(string), "%i_v_damage_4", vehicleid);
-		case v_editor: 			format(string, sizeof(string), "%i_v_editor", vehicleid);
-		case v_spawn_interiorid:format(string, sizeof(string), "%i_v_spawn_interiorid", vehicleid);
-		case v_spawn_worldid: 	format(string, sizeof(string), "%i_v_spawn_worldid", vehicleid);
-		case v_spawn_uno_damage:format(string, sizeof(string), "%i_v_spawn_uno_damage", vehicleid);
-		case v_petrolcap:		format(string, sizeof(string), "%i_v_petrolcap", vehicleid);
-		case v_bomb:			format(string, sizeof(string), "%i_v_bomb", vehicleid);
-		case v_bomb_timer:		format(string, sizeof(string), "%i_v_bomb_timer", vehicleid);
-		case v_sticky:			format(string, sizeof(string), "%i_v_sticky", vehicleid);
-		case v_update_timer:	format(string, sizeof(string), "%i_v_update_timer", vehicleid);
-	}
+    "%i_v_interior",
+    "%i_v_color_1",
+    "%i_v_color_2",
+    "%i_v_paintjob",
+    "%i_v_horn",
+    "%i_v_damage_1",
+    "%i_v_damage_2",
+    "%i_v_damage_3",
+    "%i_v_damage_4",
+    "%i_v_editor",
+    "%i_v_speedcap",
+    "%i_v_spawn_x",
+    "%i_v_spawn_y",
+    "%i_v_spawn_z",
+    "%i_v_spawn_rotation",
+    "%i_v_spawn_interiorid",
+    "%i_v_spawn_worldid",
+    "%i_v_spawn_uno_damage",
+    "%i_v_petrolcap",
+    "%i_v_bomb",
+    "%i_v_bomb_timer",
+    "%i_v_sticky",
+    "%i_v_update_timer"
+};
 
-	return setproperty(.name = string, .value = set);
+stock Vehicle_SetPropertyInt(vehicleid, type, set)
+{
+	static string[26]; //Longest String Size + NULL + 4 (VID) = 26
+	format(string, sizeof(string),v_property_frmt_strings[type], vehicleid);
+	setproperty(.name = string, .value = set);
+	return true;
 }
 
-stock static Vehicle_GetPropertyInt(vehicleid, type)
+stock Vehicle_GetPropertyInt(vehicleid, type)
 {
-	new string[35];
-	switch(type)
-	{
-		case v_interior: 		format(string, sizeof(string), "%i_v_interior", vehicleid);
-		case v_color<0>: 		format(string, sizeof(string), "%i_v_color_1", vehicleid);
-		case v_color<1>: 		format(string, sizeof(string), "%i_v_color_2", vehicleid);
-		case v_paintjob: 		format(string, sizeof(string), "%i_v_paintjob", vehicleid);
-		case v_horn: 			format(string, sizeof(string), "%i_v_horn", vehicleid);
-		case v_damage<0>:		format(string, sizeof(string), "%i_v_damage_1", vehicleid);
-		case v_damage<1>: 		format(string, sizeof(string), "%i_v_damage_2", vehicleid);
-		case v_damage<2>: 		format(string, sizeof(string), "%i_v_damage_3", vehicleid);
-		case v_damage<3>: 		format(string, sizeof(string), "%i_v_damage_4", vehicleid);
-		case v_editor: 			format(string, sizeof(string), "%i_v_editor", vehicleid);
-		case v_spawn_interiorid:format(string, sizeof(string), "%i_v_spawn_interiorid", vehicleid);
-		case v_spawn_worldid: 	format(string, sizeof(string), "%i_v_spawn_worldid", vehicleid);
-		case v_spawn_uno_damage:format(string, sizeof(string), "%i_v_spawn_uno_damage", vehicleid);
-		case v_petrolcap:		format(string, sizeof(string), "%i_v_petrolcap", vehicleid);
-		case v_bomb:			format(string, sizeof(string), "%i_v_bomb", vehicleid);
-		case v_bomb_timer:		format(string, sizeof(string), "%i_v_bomb_timer", vehicleid);
-		case v_sticky:			format(string, sizeof(string), "%i_v_sticky", vehicleid);
-		case v_update_timer:	format(string, sizeof(string), "%i_v_update_timer", vehicleid);
-	}
-
+	static string[26];
+	format(string, sizeof(string),v_property_frmt_strings[type], vehicleid);
 	return getproperty(.name = string);
 }
 
-stock static Vehicle_EncodeString(string[])
+stock Vehicle_EncodeString(string[],size=sizeof(string))
 {
 	new source[2];
-    for(new i, j = strlen(string); i < j; i++)
+    for(new i; i < size; i++)
     {
        source[0] = (source[0] + string[i]) 		% 65521;
        source[1] = (source[1] + source[0])     	% 65521;
@@ -1053,91 +1047,35 @@ stock static Vehicle_EncodeString(string[])
     return (source[1] << 16) + source[0];
 }
 
-stock static Vehicle_SetPropertyFloat(vehicleid, type, Float:set)
+stock Vehicle_SetPropertyFloat(vehicleid, type, Float:set)
 {
-	new string[35];
-	switch(type)
-	{
-		case v_speedcap: 	format(string, sizeof(string), "%i_v_speedcap", vehicleid);
-		case v_spawn<0>: 	format(string, sizeof(string), "%i_v_spawn_x", vehicleid);
-		case v_spawn<1>: 	format(string, sizeof(string), "%i_v_spawn_y", vehicleid);
-		case v_spawn<2>: 	format(string, sizeof(string), "%i_v_spawn_z", vehicleid);
-		case v_spawn<3>: 	format(string, sizeof(string), "%i_v_spawn_rotation", vehicleid);
-	}
-
-	new value[8];
-	format(value, sizeof(value), "%f", set);
-
-	return setproperty(.value = Vehicle_EncodeString(string), .string = value);
+	static string[35];
+	format(string, sizeof(string),v_property_frmt_strings[type], vehicleid);
+	format(string[27],8, "%f", set);
+	return setproperty(.value = Vehicle_EncodeString(string), .string = string[27]);
 }
 
-stock static Float:Vehicle_GetPropertyFloat(vehicleid, type)
+stock Float:Vehicle_GetPropertyFloat(vehicleid, type)
 {
-	new string[35];
-	switch(type)
-	{
-		case v_speedcap: 	format(string, sizeof(string), "%i_v_speedcap", vehicleid);
-		case v_spawn<0>: 	format(string, sizeof(string), "%i_v_spawn_x", vehicleid);
-		case v_spawn<1>: 	format(string, sizeof(string), "%i_v_spawn_y", vehicleid);
-		case v_spawn<2>: 	format(string, sizeof(string), "%i_v_spawn_z", vehicleid);
-		case v_spawn<3>: 	format(string, sizeof(string), "%i_v_spawn_rotation", vehicleid);
-	}
-
-	new value[8];
-	getproperty(.value = Vehicle_EncodeString(string), .string = value);
-
-	return floatstr(value);
+	static string[35];
+	format(string, sizeof(string),v_property_frmt_strings[type], vehicleid);
+	getproperty(.value = Vehicle_EncodeString(string), .string = string[27]);
+	return floatstr(string[27]);
 }
 
-stock static Vehicle_DeleteProperty(vehicleid, type)
+stock Vehicle_DeleteProperty(vehicleid, type)
 {
-	new string[35];
+	static string[26];
+	format(string, sizeof(string),v_property_frmt_strings[type], vehicleid);
 	switch(type)
 	{
-		case v_interior: 	format(string, sizeof(string), "%i_v_interior", vehicleid);
-		case v_color<0>: 	format(string, sizeof(string), "%i_v_color_1", vehicleid);
-		case v_color<1>: 	format(string, sizeof(string), "%i_v_color_2", vehicleid);
-		case v_paintjob: 	format(string, sizeof(string), "%i_v_paintjob", vehicleid);
-		case v_horn: 		format(string, sizeof(string), "%i_v_horn", vehicleid);
-		case v_damage<0>:	format(string, sizeof(string), "%i_v_damage_1", vehicleid);
-		case v_damage<1>: 	format(string, sizeof(string), "%i_v_damage_2", vehicleid);
-		case v_damage<2>: 	format(string, sizeof(string), "%i_v_damage_3", vehicleid);
-		case v_damage<3>: 	format(string, sizeof(string), "%i_v_damage_4", vehicleid);
-		case v_editor: 		format(string, sizeof(string), "%i_v_editor", vehicleid);
-		case v_speedcap: 	format(string, sizeof(string), "%i_v_speedcap", vehicleid);
-		case v_spawn<0>:
-		{
-			format(string, sizeof(string), "%i_v_spawn_x", vehicleid);
-			return deleteproperty(.value = Vehicle_EncodeString(string));
-		}
-		case v_spawn<1>:
-		{
-			format(string, sizeof(string), "%i_v_spawn_y", vehicleid);
-			return deleteproperty(.value = Vehicle_EncodeString(string));
-		}
-		case v_spawn<2>:
-		{
-			format(string, sizeof(string), "%i_v_spawn_z", vehicleid);
-			return deleteproperty(.value = Vehicle_EncodeString(string));
-		}
-		case v_spawn<3>:
-		{
-			format(string, sizeof(string), "%i_v_spawn_rotation", vehicleid);
-			return deleteproperty(.value = Vehicle_EncodeString(string));
-		}
-		case v_spawn<4>: 	format(string, sizeof(string), "%i_v_spawn_interiorid", vehicleid);
-		case v_spawn<5>: 	format(string, sizeof(string), "%i_v_spawn_worldid", vehicleid);
-		case v_spawn_uno_damage:format(string, sizeof(string), "%i_v_spawn_uno_damage", vehicleid);
-		case v_petrolcap:	format(string, sizeof(string), "%i_v_petrolcap", vehicleid);
-		case v_bomb:		format(string, sizeof(string), "%i_v_bomb", vehicleid);
-		case v_bomb_timer:	format(string, sizeof(string), "%i_v_bomb_timer", vehicleid);
-		case v_sticky:		format(string, sizeof(string), "%i_v_sticky", vehicleid);
-		case v_update_timer:format(string, sizeof(string), "%i_v_update_timer", vehicleid);
+		case v_spawn<0>:	return deleteproperty(.value = Vehicle_EncodeString(string));
+		case v_spawn<1>:	return deleteproperty(.value = Vehicle_EncodeString(string));
+		case v_spawn<2>:	return deleteproperty(.value = Vehicle_EncodeString(string));
+		case v_spawn<3>:	return deleteproperty(.value = Vehicle_EncodeString(string));
+	    default:			return deleteproperty(.name = string);
 	}
-
-	return deleteproperty(.name = string);
 }
-
 stock Vehicle_CreateVehicle(modelid, Float:x, Float:y, Float:z, Float:rotation, color1 = -1, color2 = -1, respawn_delay = -1, addsiren = 0, worldid = 0, interiorid = 0, bool:unoccupied_damage = false)
 {
 	if(modelid < 400 || modelid > 610) return false;
@@ -1178,10 +1116,10 @@ stock Vehicle_CreateVehicle(modelid, Float:x, Float:y, Float:z, Float:rotation, 
 
     Vehicle_SetPropertyInt(vehicleid, v_horn, 0);
 
-	for(new i; i < 4; i++)
-	{
-    	Vehicle_SetPropertyInt(vehicleid, v_damage<i>, 1);
-	}
+   	Vehicle_SetPropertyInt(vehicleid, v_damage<0>, 1);
+   	Vehicle_SetPropertyInt(vehicleid, v_damage<1>, 1);
+   	Vehicle_SetPropertyInt(vehicleid, v_damage<2>, 1);
+   	Vehicle_SetPropertyInt(vehicleid, v_damage<3>, 1);
 
 	Vehicle_SetPropertyInt(vehicleid, v_editor, INVALID_OBJECT_ID);
 
@@ -1216,8 +1154,8 @@ stock Vehicle_CreateVehicle(modelid, Float:x, Float:y, Float:z, Float:rotation, 
 	gVehicleFloat[vehicleid][2] = z;
 	gVehicleFloat[vehicleid][3] = rotation;
 
-	gVehicleFloat[vehicleid][4] = 0.0;
-	gVehicleFloat[vehicleid][5] = 0.0;
+	gVehicleFloat[vehicleid][4] = 
+	gVehicleFloat[vehicleid][5] = 
 	gVehicleFloat[vehicleid][6] = 0.0;
 
 	gVehicleFloat[vehicleid][7] = 1000.0;
@@ -1356,10 +1294,7 @@ stock Vehicle_DestroyVehicle(vehicleid)
 stock Vehicle_LinkVehicleToInterior(vehicleid, interiorid)
 {
 	if(LinkVehicleToInterior(vehicleid, interiorid))
-	{
-	    Vehicle_SetPropertyInt(vehicleid, v_interior, interiorid);
-		return true;
-	}
+	  return Vehicle_SetPropertyInt(vehicleid, v_interior, interiorid);
 	return false;
 }
 #if defined _ALS_LinkVehicleToInterior
@@ -1374,10 +1309,7 @@ stock Vehicle_LinkVehicleToInterior(vehicleid, interiorid)
 #endif
 //
 
-stock GetVehicleInterior(vehicleid)
-{
-	return Vehicle_GetPropertyInt(vehicleid, v_interior);
-}
+#define GetVehicleInterior(%0) Vehicle_GetPropertyInt(%0, v_interior)
 
 stock Vehicle_ChangeVehicleColor(vehicleid, color1, color2)
 {
@@ -1434,9 +1366,9 @@ stock Vehicle_ChangeVehiclePaintjob(vehicleid, paintjobid)
 
 		if(paintjobid == 3)
 		{
-			new colors[2];
-			GetVehicleColor(vehicleid, colors[0], colors[1]);
-			ChangeVehicleColor(vehicleid, colors[0], colors[1]);
+			new colors1,colors2;
+			GetVehicleColor(vehicleid, colors1, colors2);
+			ChangeVehicleColor(vehicleid, colors1, colors2);
 		}
 		return true;
 	}
@@ -1449,15 +1381,10 @@ stock Vehicle_ChangeVehiclePaintjob(vehicleid, paintjobid)
 #endif
 #define ChangeVehiclePaintjob Vehicle_ChangeVehiclePaintjob
 
-stock GetVehiclePaintjob(vehicleid)
-{
-	return Vehicle_GetPropertyInt(vehicleid, v_paintjob);
-}
 
-stock RemoveVehiclePaintjob(vehicleid)
-{
-	return ChangeVehiclePaintjob(vehicleid, 3);
-}
+#define GetVehiclePaintjob(%0) Vehicle_GetPropertyInt(%0, v_paintjob)
+#define RemoveVehiclePaintjob(%0) ChangeVehiclePaintjob(%0, 3)
+
 
 public OnVehiclePaintjob(playerid, vehicleid, paintjobid)
 {
@@ -1483,28 +1410,28 @@ public OnVehicleSpawn(vehicleid)
 {
 	Vehicle_SetPropertyInt(vehicleid, v_paintjob, 3);
 
-	new colors[2];
-	colors[0] = Vehicle_GetPropertyInt(vehicleid, v_color<0>);
-	colors[1] = Vehicle_GetPropertyInt(vehicleid, v_color<1>);
-	ChangeVehicleColor(vehicleid, colors[0], colors[1]);
+	new colors1,colors2;
+	colors1 = Vehicle_GetPropertyInt(vehicleid, v_color<0>);
+	colors2 = Vehicle_GetPropertyInt(vehicleid, v_color<1>);
+	ChangeVehicleColor(vehicleid, colors1, colors2);
 
-	new Float:pos[3];
-	GetVehiclePos(vehicleid, pos[0], pos[1], pos[2]);
+	new Float:x,Float:y,Float:z;
+	GetVehiclePos(vehicleid,x,y,z);
 
 	new Float:angle;
 	GetVehicleZAngle(vehicleid, angle);
 
-	new Float:vehicle_pos[3], Float:vehicle_angle, vehicle_worldid, vehicle_interiorid;
-	GetVehicleSpawnInfo(vehicleid, vehicle_pos[0], vehicle_pos[1], vehicle_pos[2], vehicle_angle, vehicle_worldid, vehicle_interiorid);
+	new Float:vehicle_pos_x,Float:vehicle_pos_y,Float:vehicle_pos_z, Float:vehicle_angle, vehicle_worldid, vehicle_interiorid;
+	GetVehicleSpawnInfo(vehicleid, vehicle_pos_x, vehicle_pos_y, vehicle_pos_z, vehicle_angle, vehicle_worldid, vehicle_interiorid);
 
- 	if( pos[0] != vehicle_pos[0] ||
-		pos[1] != vehicle_pos[1] ||
-		pos[2] != vehicle_pos[2] ||
+ 	if( x != vehicle_pos_x ||
+		y != vehicle_pos_y ||
+		z != vehicle_pos_z ||
 		angle != vehicle_angle ||
 		vehicle_worldid != GetVehicleVirtualWorld(vehicleid) ||
 		vehicle_interiorid != GetVehicleInterior(vehicleid))
 	{
-	    TeleportVehicle(vehicleid, vehicle_pos[0], vehicle_pos[1], vehicle_pos[2], vehicle_angle, vehicle_worldid, vehicle_interiorid);
+	    TeleportVehicle(vehicleid, vehicle_pos_x, vehicle_pos_y, vehicle_pos_z, vehicle_angle, vehicle_worldid, vehicle_interiorid);
 	}
 
     #if defined Vehicle_OnVehicleSpawn
@@ -1544,39 +1471,27 @@ public OnVehicleRespray(playerid, vehicleid, color1, color2)
 #endif
 #define OnVehicleRespray Vehicle_OnVehicleRespray
 
-stock SetVehicleHorn(vehicleid, soundid)
-{
-	Vehicle_SetPropertyInt(vehicleid, v_horn, soundid);
-	return true;
-}
-
-stock GetVehicleHorn(vehicleid)
-{
-	return Vehicle_GetPropertyInt(vehicleid, v_horn);
-}
-
-stock RestoreVehicleHorn(vehicleid)
-{
-	return SetVehicleHorn(vehicleid, 0);
-}
+#define SetVehicleHorn(%0,%1) Vehicle_SetPropertyInt(%0, v_horn, %1)
+#define GetVehicleHorn(%0) Vehicle_GetPropertyInt(%0, v_horn)
+#define RestoreVehicleHorn(%0) Vehicle_SetPropertyInt(%0, v_horn,0)
 
 public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 {
+    static horn;
 	if(newkeys & KEY_CROUCH)
 	{
 	    if(GetPlayerState(playerid) == PLAYER_STATE_DRIVER)
 	    {
-	        new horn = Vehicle_GetPropertyInt(GetPlayerVehicleID(playerid), v_horn);
-	        if(horn != 0)
+	        if((horn = Vehicle_GetPropertyInt(GetPlayerVehicleID(playerid), v_horn)))
 	        {
-				new Float:pos[3];
-				GetPlayerPos(playerid, pos[0], pos[1], pos[2]);
+				static Float:x,Float:y,Float:z;
+				GetPlayerPos(playerid,x,y,z);
 
-			    for(new i; i < MAX_PLAYERS; i++)
+			    for(new i; i <= GetPlayerPoolSize(); i++)
 			    {
-			        if(IsPlayerInRangeOfPoint(i, 35.0, pos[0], pos[1], pos[2]))
+			        if(IsPlayerInRangeOfPoint(i, 35.0,x,y,z))
 					{
-					    PlayerPlaySound(playerid, horn, pos[0], pos[1], pos[2]);
+					    PlayerPlaySound(playerid, horn,x,y,z);
 					}
 			    }
 		    }
@@ -1611,10 +1526,7 @@ stock ToggleVehicleDamageUpdate(vehicleid, type, bool:toggle)
     return Vehicle_SetPropertyInt(vehicleid, v_damage<type>, _:toggle);
 }
 
-stock IsVehicleDamageToggled(vehicleid, type)
-{
-	return Vehicle_GetPropertyInt(vehicleid, v_damage<type>);
-}
+#define IsVehicleDamageToggled(%0,%1) Vehicle_GetPropertyInt(%0, v_damage<%1>)
 
 stock Vehicle_SetVehicleHealth(vehicleid, Float:health)
 {
@@ -1634,7 +1546,7 @@ stock Vehicle_SetVehicleHealth(vehicleid, Float:health)
 
 stock UpdateVehicleDamageStatusEx(vehicleid, type, update)
 {
-	new panels, doors, lights, tires;
+	static panels, doors, lights, tires;
 	GetVehicleDamageStatus(vehicleid, panels, doors, lights, tires);
 
     switch(type)
@@ -1649,7 +1561,7 @@ stock UpdateVehicleDamageStatusEx(vehicleid, type, update)
 
 stock GetVehicleDamageStatusEx(vehicleid, type)
 {
-	new panels, doors, lights, tires;
+	static panels, doors, lights, tires;
 	GetVehicleDamageStatus(vehicleid, panels, doors, lights, tires);
 
 	switch(type)
@@ -1664,7 +1576,7 @@ stock GetVehicleDamageStatusEx(vehicleid, type)
 
 public OnVehicleDamageStatusUpdate(vehicleid, playerid)
 {
-	new panels, doors, lights, tires;
+	static panels, doors, lights, tires;
 	GetVehicleDamageStatus(vehicleid, panels, doors, lights, tires);
 
 	if(! IsVehicleDamageToggled(vehicleid, VEHICLE_DAMAGE_PANELS)) UpdateVehicleDamageStatusEx(vehicleid, VEHICLE_DAMAGE_PANELS, 0);
@@ -1688,25 +1600,13 @@ public OnVehicleDamageStatusUpdate(vehicleid, playerid)
 #endif
 #define OnVehicleDamageStatusUpdate V_OnVehicleDamageStatusUpdate
 
-stock static encode_lights(light1, light2, light3, light4)
-{
-	return light1 | (light2 << 1) | (light3 << 2) | (light4 << 3);
-}
-stock static encode_panels(flp, frp, rlp, rrp, windshield, front_bumper, rear_bumper)
-{
-	return flp | (frp << 4) | (rlp << 8) | (rrp << 12) | (windshield << 16) | (front_bumper << 20) | (rear_bumper << 24);
-}
-
-stock static encode_doors(bonnet, boot, driver_door, passenger_door, behind_driver_door, behind_passenger_door)
-{
-    #pragma unused behind_driver_door
-    #pragma unused behind_passenger_door
-    return bonnet | (boot << 8) | (driver_door << 16) | (passenger_door << 24);
-}
+#define encode_lights(%0,%1,%2,%3) (%0 | (%1 << 1) | (%2 << 2) | (%3 << 3))
+#define encode_panels(%0,%1,%2,%3,%4,%5,%6) (%0 | (%1 << 4) | (%2 << 8) | (%3 << 12) | (%4 << 16) | (%5 << 20) | (%6 << 24))
+#define encode_doors(%0,%1,%2,%3,%4,%5) (%0 | (%1 << 8) | (%2 << 16) | (%3 << 24))
 
 stock static Vehicle_UpdateVehicleDamage(vehicleid, type)
 {
-    new panels, doors, lights, tires;
+    static panels, doors, lights, tires;
     GetVehicleDamageStatus(vehicleid, panels, doors, lights, tires);
     switch(type)
 	{
@@ -1717,41 +1617,37 @@ stock static Vehicle_UpdateVehicleDamage(vehicleid, type)
     UpdateVehicleDamageStatus(vehicleid, panels, doors, lights, tires);
 	return 1;
 }
-
+static const gWeaponDamageOnVehicle[]=
+{
+	40,
+	40,
+	140,
+	80,
+	80,
+	80,
+	25,
+	25,
+	30,
+	30,
+	25,
+	75,
+	125,
+	751,
+	751,
+	0,
+	50
+};
 public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, Float:fZ)
 {
     if(hittype == BULLET_HIT_TYPE_VEHICLE)
     {
-        new Float:fHealth;
+        static Float:fHealth;
         GetVehicleHealth(hitid, fHealth);
 
 		if(fHealth > (250 - 1))
 		{
-			new
-				fModelid = GetVehicleModel(hitid),
-				Float:fOffSet[3],
-				Float:fDamage
-			;
-
-			switch(GetPlayerWeapon(playerid))
-			{
-				case 22: fDamage = 40.0;
-				case 23: fDamage = 40.0;
-    			case 24: fDamage = 140.0;
-       			case 25: fDamage = 80.0;
-                case 26: fDamage = 80.0;
-                case 27: fDamage = 80.0;
-                case 28: fDamage = 25.0;
-                case 29: fDamage = 25.0;
-                case 30: fDamage = 30.0;
-                case 31: fDamage = 30.0;
-                case 32: fDamage = 25.0;
-                case 33: fDamage = 75.0;
-                case 34: fDamage = 125.0;
-                case 35: fDamage = 751.0;
-                case 36: fDamage = 751.0;
-                case 38: fDamage = 50.0;
-            }
+			new	fModelid = GetVehicleModel(hitid);
+			static	Float:fOffSet[3];
 
 			//front wheels
 			GetVehicleModelInfo(fModelid, VEHICLE_MODEL_INFO_WHEELSFRONT, fOffSet[0], fOffSet[1], fOffSet[2]);
@@ -1763,26 +1659,19 @@ public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY
 				fZ >= fOffSet[2] - 0.4 &&
 				fZ <= fOffSet[2] + 0.4)
 			{
-				if(	CallLocalFunction("OnPlayerShotVehicle", "iiifi", playerid, hitid, weaponid, fDamage, VEHICLE_BODYPART_FRONT_LEFT_WHEEL) ||
-					funcidx("OnPlayerShotVehicle") == -1)
-				{
-					if(IsUnoccupiedDamageToggled(hitid))
+			    #if defined OnPlayerShotVehicle
+			    if(OnPlayerShotVehicle(playerid, hitid, weaponid,gWeaponDamageOnVehicle[GetPlayerWeapon(playerid)-22], VEHICLE_BODYPART_FRONT_LEFT_WHEEL))
+			    {
+				#endif
+				    if(IsUnoccupiedDamageToggled(hitid))
 					{
-						switch(GetVehicleDamageStatusEx(hitid, VEHICLE_DAMAGE_TIRES))
-						{
-						    case 0: UpdateVehicleDamageStatusEx(hitid, VEHICLE_DAMAGE_TIRES, 8);
-						    case 1: UpdateVehicleDamageStatusEx(hitid, VEHICLE_DAMAGE_TIRES, 9);
-						    case 2: UpdateVehicleDamageStatusEx(hitid, VEHICLE_DAMAGE_TIRES, 10);
-						    case 3: UpdateVehicleDamageStatusEx(hitid, VEHICLE_DAMAGE_TIRES, 11);
-						    case 4: UpdateVehicleDamageStatusEx(hitid, VEHICLE_DAMAGE_TIRES, 12);
-						    case 5: UpdateVehicleDamageStatusEx(hitid, VEHICLE_DAMAGE_TIRES, 13);
-						    case 6: UpdateVehicleDamageStatusEx(hitid, VEHICLE_DAMAGE_TIRES, 14);
-						    case 7: UpdateVehicleDamageStatusEx(hitid, VEHICLE_DAMAGE_TIRES, 15);
-						}
+					    UpdateVehicleDamageStatusEx(hitid, VEHICLE_DAMAGE_TIRES,8+GetVehicleDamageStatusEx(hitid, VEHICLE_DAMAGE_TIRES));
 						return 1;
 					}
+				#if defined OnPlayerShotVehicle
 				}
 				else return 0;
+				#endif
 			}
 			//right
 			if(	fX >= fOffSet[0] - 0.4 &&
@@ -1792,9 +1681,10 @@ public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY
 				fZ >= fOffSet[2] - 0.4 &&
 				fZ <= fOffSet[2] + 0.4)
 			{
-				if(	CallLocalFunction("OnPlayerShotVehicle", "iiifi", playerid, hitid, weaponid, fDamage, VEHICLE_BODYPART_FRONT_RIGHT_WHEEL)  ||
-					funcidx("OnPlayerShotVehicle") == -1)
+			    #if defined OnPlayerShotVehicle
+				if(OnPlayerShotVehicle(playerid, hitid, weaponid,gWeaponDamageOnVehicle[GetPlayerWeapon(playerid)-22], VEHICLE_BODYPART_FRONT_LEFT_WHEEL))
 				{
+				#endif
 					if(IsUnoccupiedDamageToggled(hitid))
 					{
 						switch(GetVehicleDamageStatusEx(hitid, VEHICLE_DAMAGE_TIRES))
@@ -1810,8 +1700,10 @@ public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY
 						}
 						return 1;
 					}
+				#if defined OnPlayerShotVehicle
 				}
 				else return 0;
+				#endif
 			}
 
 			//back wheels
@@ -1824,9 +1716,10 @@ public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY
 				fZ >= fOffSet[2] - 0.4 &&
 				fZ <= fOffSet[2] + 0.4)
 			{
-				if(	CallLocalFunction("OnPlayerShotVehicle", "iiifi", playerid, hitid, weaponid, fDamage, VEHICLE_BODYPART_BACK_LEFT_WHEEL) ||
-					funcidx("OnPlayerShotVehicle") == -1)
+				#if defined OnPlayerShotVehicle
+				if(OnPlayerShotVehicle(playerid, hitid, weaponid,gWeaponDamageOnVehicle[GetPlayerWeapon(playerid)-22], VEHICLE_BODYPART_FRONT_LEFT_WHEEL))
 				{
+				#endif
 					if(IsUnoccupiedDamageToggled(hitid))
 					{
 						switch(GetVehicleDamageStatusEx(hitid, VEHICLE_DAMAGE_TIRES))
@@ -1842,8 +1735,10 @@ public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY
 						}
 						return 1;
 					}
+				#if defined OnPlayerShotVehicle
 				}
 				else return 0;
+				#endif
 			}
 			//right
 			if(	fX >= fOffSet[0] - 0.4 &&
@@ -1853,9 +1748,10 @@ public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY
 				fZ >= fOffSet[2] - 0.4 &&
 				fZ <= fOffSet[2] + 0.4)
 			{
-				if(	CallLocalFunction("OnPlayerShotVehicle", "iiifi", playerid, hitid, weaponid, fDamage, VEHICLE_BODYPART_BACK_RIGHT_WHEEL) ||
-					funcidx("OnPlayerShotVehicle") == -1)
+				#if defined OnPlayerShotVehicle
+				if(OnPlayerShotVehicle(playerid, hitid, weaponid,gWeaponDamageOnVehicle[GetPlayerWeapon(playerid)-22], VEHICLE_BODYPART_FRONT_LEFT_WHEEL))
 				{
+				#endif
 					if(IsUnoccupiedDamageToggled(hitid))
 					{
 						switch(GetVehicleDamageStatusEx(hitid, VEHICLE_DAMAGE_TIRES))
@@ -1871,10 +1767,12 @@ public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY
 						}
 						return 1;
 					}
+                #if defined OnPlayerShotVehicle
 				}
 				else return 0;
+				#endif
 			}
-
+			new Float:fDamage = gWeaponDamageOnVehicle[GetPlayerWeapon(playerid)-22];
 			//petrol cap
 			fModelid -= 400;
 			if(	fX >= gVehiclePetrolCapOffsets[fModelid][0] - 0.15 &&
@@ -1884,9 +1782,11 @@ public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY
 				fZ >= gVehiclePetrolCapOffsets[fModelid][2] - 0.15 &&
 				fZ <= gVehiclePetrolCapOffsets[fModelid][2] + 0.15)
 			{
-				if(	CallLocalFunction("OnPlayerShotVehicle", "iiifi", playerid, hitid, weaponid, fDamage, VEHICLE_BODYPART_PETROLCAP) ||
-					funcidx("OnPlayerShotVehicle") == -1)
+				
+				#if defined OnPlayerShotVehicle				
+				if(OnPlayerShotVehicle(playerid, hitid, weaponid,fDamage, VEHICLE_BODYPART_FRONT_LEFT_WHEEL))
 				{
+				#endif
 					if(IsPetrolCapDestroyToggled(hitid))
 	    			{
 						if(	IsUnoccupiedDamageToggled(hitid) ||
@@ -1910,13 +1810,15 @@ public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY
 						    case 600..700: return Vehicle_UpdateVehicleDamage(hitid, VEHICLE_DAMAGE_LIGHTS);
 						}
 					}
+				#if defined OnPlayerShotVehicle
 				}
 				else return 0;
+				#endif
 			}
-
-			if(	CallLocalFunction("OnPlayerShotVehicle", "iiifi", playerid, hitid, weaponid, fDamage, VEHICLE_BODYPART_UNKNOWN) ||
-				funcidx("OnPlayerShotVehicle") == -1)
+			#if defined OnPlayerShotVehicle
+			if(OnPlayerShotVehicle(playerid, hitid, weaponid,fDamage, VEHICLE_BODYPART_FRONT_LEFT_WHEEL))
 			{
+			#endif
 			    if(IsUnoccupiedDamageToggled(hitid))
 			    {
 					fHealth -= fDamage;
@@ -1929,8 +1831,10 @@ public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY
 					    case 600..700: return Vehicle_UpdateVehicleDamage(hitid, VEHICLE_DAMAGE_LIGHTS);
 					}
 				}
+			#if defined OnPlayerShotVehicle
 			}
 			else return 0;
+			#endif
 		}
 	}
 
@@ -1950,14 +1854,11 @@ public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY
 #endif
 #define OnPlayerWeaponShot Vehicle_OnPlayerWeaponShot
 
-forward OnPlayerShotVehicle(playerid, vehicleid, weaponid, Float:amount, bodypart);
-
 stock IsVehicleOccupied(vehicleid)
 {
-    for(new i; i < MAX_PLAYERS; i++)
+    for(new i; i <= GetPlayerPoolSize(); i++)
     {
-        if(	IsPlayerConnected(i) &&
-			IsPlayerInVehicle(i, vehicleid))
+        if(IsPlayerInVehicle(i, vehicleid))
 		{
 			return true;
         }
@@ -1982,9 +1883,9 @@ stock EditVehicle(playerid, vehicleid)
 {
 	if(IsValidObject(Vehicle_GetPropertyInt(vehicleid, v_editor))) return false;
 
-	new Float:pos[3];
-	GetVehiclePos(vehicleid, pos[0], pos[1], pos[2]);
-	Vehicle_SetPropertyInt(vehicleid, v_editor, CreateObject(19300, pos[0], pos[1], pos[2], 0.0, 0.0, 0.0));
+	static Float:x,Float:y,Float:z;
+	GetVehiclePos(vehicleid,x,y,z);
+	Vehicle_SetPropertyInt(vehicleid, v_editor, CreateObject(19300,z,y,z, 0.0, 0.0, 0.0));
 
 	EditObject(playerid, Vehicle_GetPropertyInt(vehicleid, v_editor));
 
@@ -2005,8 +1906,9 @@ public OnPlayerEditObject(playerid, playerobject, objectid, response, Float:fX, 
 	        SetVehiclePos(gPlayerEdit[playerid], fX, fY, fZ);
 			SetVehicleZAngle(gPlayerEdit[playerid], fRotZ);
 
-			CallLocalFunction("OnPlayerEditVehicle", "iiiffff", playerid, gPlayerEdit[playerid], response, fX, fY, fZ, fRotZ);
-
+			#if defined OnPlayerEditVehicle
+			OnPlayerEditVehicle(playerid, gPlayerEdit[playerid], response, fX, fY, fZ, fRotZ);
+			#endif
 	        switch(response)
 	        {
 	            case EDIT_RESPONSE_CANCEL, EDIT_RESPONSE_FINAL:
@@ -2038,7 +1940,9 @@ public OnPlayerEditObject(playerid, playerobject, objectid, response, Float:fX, 
 #endif
 #define OnPlayerEditObject Vehicle_OnPlayerEditObject
 
+#if defined OnPlayerEditVehicle
 forward OnPlayerEditVehicle(playerid, vehicleid, response, Float:fX, Float:fY, Float:fZ, Float:fRotZ);
+#endif
 
 stock GetVehicleName(vehicleid, string[], len = sizeof(string))
 {
@@ -2074,14 +1978,13 @@ stock GetVehicleParams(vehicleid, type)
 
 stock Float:GetVehicleSpeed(vehicleid, bool:kmh = true, Float:velx = 0.0, Float:vely = 0.0, Float:velz = 0.0)
 {
+    static Float:speed;
 	if(	velx == 0.0 &&
 		vely == 0.0 &&
 		velz == 0.0)
  	{
 		GetVehicleVelocity(vehicleid, velx, vely, velz);
 	}
-
-	new Float:speed;
 
 	if(kmh) speed = floatsqroot(((velx * velx) + (vely * vely)) + (velz * velz)) * 136.666667;
 	else 	speed = floatsqroot(((velx * velx) + (vely * vely)) + (velz * velz)) * 85.4166672;
@@ -2176,50 +2079,38 @@ stock TeleportVehicle(vehicleid, Float:x, Float:y, Float:z, Float:rotation, worl
 	return true;
 }
 
-stock SetVehicleSpeedCap(vehicleid, Float:maxspeed)
-{
-    return Vehicle_SetPropertyFloat(vehicleid, v_speedcap, maxspeed);
-}
-
-stock Float:GetVehicleSpeedCap(vehicleid)
-{
-    return Vehicle_GetPropertyFloat(vehicleid, v_speedcap);
-}
-
-stock DisableVehicleSpeedCap(vehicleid)
-{
-	return SetVehicleSpeedCap(vehicleid, 0);
-}
+#define SetVehicleSpeedCap(%0,%1) Vehicle_SetPropertyFloat(%0, v_speedcap,%1);
+#define GetVehicleSpeedCap(%0) Vehicle_GetPropertyFloat(%0, v_speedcap)
+#define DisableVehicleSpeedCap(%0) SetVehicleSpeedCap(%0, 0)
 
 public OnPlayerUpdate(playerid)
 {
  	if(GetPlayerState(playerid) == PLAYER_STATE_DRIVER)
 	{
-		new vehicleid;
-		vehicleid = GetPlayerVehicleID(playerid);
+		new vehicleid = GetPlayerVehicleID(playerid);
+		new Float:x,Float:y,Float:z;
+		GetVehicleVelocity(vehicleid, x,y,z);
+		
+		new Float:speedcap = GetVehicleSpeedCap(vehicleid);
+		new Float:speed = GetVehicleSpeed(vehicleid, true, x,y,z);
 
-		new Float:speedcap;
-		speedcap = GetVehicleSpeedCap(vehicleid);
-
-		new Float:vel[3];
-		GetVehicleVelocity(vehicleid, vel[0], vel[1], vel[2]);
-
-		new Float:speed;
-		speed = GetVehicleSpeed(vehicleid, true, vel[0], vel[1], vel[2]);
-
+		 
 		if(speedcap != 0.0)
 		{
 			if(speed > speedcap)
 			{
-			    if(	funcidx("OnPlayerReachSpeedCapLimit") == -1 ||
-					CallLocalFunction("OnPlayerReachSpeedCapLimit", "iif", playerid, vehicleid, speed))
+			    #if defined OnPlayerReachSpeedCapLimit
+			    if(CallLocalFunction("OnPlayerReachSpeedCapLimit", "iif", playerid, vehicleid, speed))
 			    {
-					vel[0] = (vel[0] / speed) * speedcap;
-					vel[1] = (vel[1] / speed) * speedcap;
-					vel[2] = (vel[2] / speed) * speedcap;
+			    #endif
+					x = (x / speed) * speedcap;
+					y = (y / speed) * speedcap;
+					z = (z / speed) * speedcap;
 
-					SetVehicleVelocity(vehicleid, vel[0], vel[1], vel[2]);
-				}
+					SetVehicleVelocity(vehicleid, x,y,z);
+				#if defined OnPlayerReachSpeedCapLimit
+			    }
+			    #endif
 			}
 		}
 	}
@@ -2276,26 +2167,6 @@ stock GetVehicleSpawnInfo(vehicleid, &Float:x, &Float:y, &Float:z, &Float:rotati
 	return true;
 }
 
-stock ToggleUnoccupiedVehicleDamage(vehicleid, bool:toggle)
-{
-	return Vehicle_SetPropertyInt(vehicleid, v_spawn_uno_damage, _:toggle);
-}
-
-stock IsUnoccupiedDamageToggled(vehicleid)
-{
-	return Vehicle_GetPropertyInt(vehicleid, v_spawn_uno_damage);
-}
-
-stock ToggleVehiclePetrolCapDestroy(vehicleid, bool:toggle)
-{
-	return Vehicle_SetPropertyInt(vehicleid, v_petrolcap, _:toggle);
-}
-
-stock IsPetrolCapDestroyToggled(vehicleid)
-{
-	return Vehicle_GetPropertyInt(vehicleid, v_petrolcap);
-}
-
 stock SetVehicleBomb(vehicleid, time = 1000)
 {
 	if(IsVehicleBombed(vehicleid))
@@ -2310,21 +2181,9 @@ stock SetVehicleBomb(vehicleid, time = 1000)
 	return Vehicle_SetPropertyInt(vehicleid, v_bomb, time);
 }
 
-stock GetVehicleBomb(vehicleid)
-{
-	return Vehicle_GetPropertyInt(vehicleid, v_bomb);
-}
-
-stock RemoveVehicleBomb(vehicleid)
-{
-	return SetVehicleBomb(vehicleid, 0);
-}
-
-stock IsVehicleBombed(vehicleid)
-{
-	if(GetVehicleBomb(vehicleid)) return true;
-	return false;
-}
+#define GetVehicleBomb(%0) Vehicle_GetPropertyInt(%0, v_bomb)
+#define RemoveVehicleBomb(%0) SetVehicleBomb(%0, 0);
+#define IsVehicleBombed(vehicleid) (!!(GetVehicleBomb(vehicleid)))
 
 stock IsVehicleBombActivated(vehicleid)
 {
@@ -2337,7 +2196,9 @@ stock IsVehicleBombActivated(vehicleid)
     }
     return false;
 }
-
+#if defined OnVehicleBombActivate
+forward OnVehicleBombActivate(vehicleid);
+#endif
 public OnPlayerStateChange(playerid, newstate, oldstate)
 {
 	if(newstate == PLAYER_STATE_DRIVER)
@@ -2348,9 +2209,10 @@ public OnPlayerStateChange(playerid, newstate, oldstate)
 		{
 		    if(! IsVehicleBombActivated(vehicleid))
 		    {
-		        if(	CallLocalFunction("OnVehicleBombActivate", "i", vehicleid) ||
-					funcidx("OnVehicleBombActivate") == -1)
+		        #if defined OnVehicleBombActivate
+		        if(OnVehicleBombActivate(vehicleid))
 		        {
+		        #endif
 		            new interval = (GetVehicleBomb(vehicleid) - 1750);
 		            if(interval < 1750)
 		            {
@@ -2361,7 +2223,9 @@ public OnPlayerStateChange(playerid, newstate, oldstate)
 		            {
 		        		Vehicle_SetPropertyInt(vehicleid, v_bomb_timer, SetTimerEx("Vehicle_OnVehicleBombActivate", interval, false, "ii", playerid, vehicleid));
 					}
-				}
+				#if defined OnVehicleBombActivate
+		        }
+		        #endif
 		    }
 		}
 
@@ -2397,8 +2261,6 @@ public OnPlayerStateChange(playerid, newstate, oldstate)
 #endif
 #define OnPlayerStateChange Vehicle_OnPlayerStateChange
 
-forward OnVehicleBombActivate(vehicleid);
-
 forward Vehicle_OnVehicleBombActivate(playerid, vehicleid);
 public Vehicle_OnVehicleBombActivate(playerid, vehicleid)
 {
@@ -2418,7 +2280,7 @@ public Vehicle_OnVehicleBombExplode(playerid, vehicleid)
     		return SetVehicleParams(vehicleid, VEHICLE_PARAMS_ALARM, VEHICLE_PARAMS_OFF);
 		}
 	}
-	
+
 	CallLocalFunction("OnVehicleBombExplode", "i", vehicleid);
 
 	SetVehicleParams(vehicleid, VEHICLE_PARAMS_ALARM, VEHICLE_PARAMS_OFF);
@@ -2438,19 +2300,12 @@ public Vehicle_OnVehicleBombExplode(playerid, vehicleid)
 	return 1;
 }
 
+#if defined  OnVehicleBombDeactivate
 forward OnVehicleBombDeactivate(vehicleid);
+#endif
+#if defined OnVehicleStreamIn
 forward OnVehicleBombExplode(vehicleid);
-
-stock ToggleVehicleSticky(vehicleid, bool:toggle)
-{
-    return Vehicle_SetPropertyInt(vehicleid, v_sticky, _:toggle);
-}
-
-stock IsVehicleSticky(vehicleid)
-{
-	return Vehicle_GetPropertyInt(vehicleid, v_sticky);
-}
-
+#endif
 public OnVehicleStreamIn(vehicleid, forplayerid)
 {
 	if(Vehicle_GetPropertyInt(vehicleid, v_update_timer) == -1)
@@ -2523,14 +2378,13 @@ public OnVehicleTimeUpdate(vehicleid)
 			return TeleportVehicle(vehicleid, gVehicleFloat[vehicleid][0], gVehicleFloat[vehicleid][1], gVehicleFloat[vehicleid][2], gVehicleFloat[vehicleid][3], GetVehicleInterior(vehicleid), GetVehicleVirtualWorld(vehicleid));
  	 	}
     }
-	if(funcidx("OnVehiclePosChange") != -1)
-	{
+    #if defined OnVehiclePosChange
 		if(	FloatData[0] != gVehicleFloat[vehicleid][0] ||
 		    FloatData[1] != gVehicleFloat[vehicleid][1] ||
 		    FloatData[2] != gVehicleFloat[vehicleid][2] ||
 		    FloatData[3] != gVehicleFloat[vehicleid][3])
 	 	{
-	 	    if(CallLocalFunction("OnVehiclePosChange", "iffffffff", vehicleid, FloatData[0], FloatData[1], FloatData[2], FloatData[3], gVehicleFloat[vehicleid][0], gVehicleFloat[vehicleid][1], gVehicleFloat[vehicleid][2], gVehicleFloat[vehicleid][3]))
+	 	    if(OnVehiclePosChange(vehicleid, FloatData[0], FloatData[1], FloatData[2], FloatData[3], gVehicleFloat[vehicleid][0], gVehicleFloat[vehicleid][1], gVehicleFloat[vehicleid][2], gVehicleFloat[vehicleid][3]))
 	 	    {
 	 	        gVehicleFloat[vehicleid][0] = FloatData[0];
 			    gVehicleFloat[vehicleid][1] = FloatData[1];
@@ -2542,16 +2396,16 @@ public OnVehicleTimeUpdate(vehicleid)
 	 	        return TeleportVehicle(vehicleid, gVehicleFloat[vehicleid][0], gVehicleFloat[vehicleid][1], gVehicleFloat[vehicleid][2], gVehicleFloat[vehicleid][3], GetVehicleInterior(vehicleid), GetVehicleVirtualWorld(vehicleid));
 	 	    }
 		}
- 	}
+ 	#endif
 
+	
+	#if defined OnVehicleVelocityChange
 	GetVehicleVelocity(vehicleid, FloatData[0], FloatData[1], FloatData[2]);
-	if(funcidx("OnVehicleVelocityChange") != -1)
- 	{
 	 	if(	FloatData[0] != gVehicleFloat[vehicleid][4] ||
 		    FloatData[1] != gVehicleFloat[vehicleid][5] ||
 		    FloatData[2] != gVehicleFloat[vehicleid][6])
  		{
-	 	    if(CallLocalFunction("OnVehicleVelocityChange", "iffffff", vehicleid, FloatData[0], FloatData[1], FloatData[2], gVehicleFloat[vehicleid][4], gVehicleFloat[vehicleid][5], gVehicleFloat[vehicleid][6]))
+	 	    if(OnVehicleVelocityChange(vehicleid, FloatData[0], FloatData[1], FloatData[2], gVehicleFloat[vehicleid][4], gVehicleFloat[vehicleid][5], gVehicleFloat[vehicleid][6]))
 	 	    {
 		 	    gVehicleFloat[vehicleid][4] = FloatData[0];
 				gVehicleFloat[vehicleid][5] = FloatData[1];
@@ -2562,14 +2416,14 @@ public OnVehicleTimeUpdate(vehicleid)
 	 	        return SetVehicleVelocity(vehicleid, gVehicleFloat[vehicleid][4], gVehicleFloat[vehicleid][5], gVehicleFloat[vehicleid][6]);
 	 	    }
 		}
-	}
+	#endif
 
-	GetVehicleHealth(vehicleid, FloatData[0]);
- 	if(funcidx("OnVehicleHealthChange") != -1)
- 	{
+	
+ 	#if defined OnVehicleHealthChange
+ 	GetVehicleHealth(vehicleid, FloatData[0]);
 	 	if(FloatData[0] != gVehicleFloat[vehicleid][7])
 	 	{
-	 	    if(CallLocalFunction("OnVehicleHealthChange", "iff", vehicleid, FloatData[0], gVehicleFloat[vehicleid][7]))
+	 	    if(OnVehicleHealthChange(vehicleid, FloatData[0], gVehicleFloat[vehicleid][7]))
 	 	    {
 				gVehicleFloat[vehicleid][7] = FloatData[0];
 	 	    }
@@ -2578,22 +2432,28 @@ public OnVehicleTimeUpdate(vehicleid)
 				return SetVehicleHealth(vehicleid, gVehicleFloat[vehicleid][7]);
 	 	    }
 	 	}
-	}
+	#endif
 	return 1;
 }
 
+#if defined OnVehiclePosChange
 forward OnVehiclePosChange(vehicleid, Float:newx, Float:newy, Float:newz, Float:newrotation, Float:oldx, Float:oldy, Float:oldz, Float:oldrotation);
+#endif
+#if defined  OnVehicleVelocityChange
 forward OnVehicleVelocityChange(vehicleid, Float:newx, Float:newy, Float:newz, Float:oldx, Float:oldy, Float:oldz);
+#endif
+#if defined  OnVehicleHealthChange
 forward OnVehicleHealthChange(vehicleid, Float:newhealth, Float:oldhealth);
+#endif
 
 stock CountAllVehicles()
 {
 	new count;
-	for(new i; i <= GetVehiclePoolSize(); i++)
+	for(new i = GetVehiclePoolSize(); i != -1 ; i--)
 	{
 		if(IsValidVehicle(i))
 		{
-			count += 1;
+			count++;
 		}
 	}
 	return count;
@@ -2601,7 +2461,7 @@ stock CountAllVehicles()
 
 stock DestroyAllVehicles()
 {
-	for(new i; i <= GetVehiclePoolSize(); i++)
+	for(new i = GetVehiclePoolSize(); i != -1; i--)
 	{
 		if(IsValidVehicle(i))
 		{
@@ -2610,3 +2470,4 @@ stock DestroyAllVehicles()
 	}
 	return true;
 }
+
